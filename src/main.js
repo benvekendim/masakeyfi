@@ -93,3 +93,6 @@ document.addEventListener('visibilitychange', () => {
         }
     }
 });
+
+// Sayfa yüklendiğinde global sohbeti başlat
+connectToGlobalChat();
