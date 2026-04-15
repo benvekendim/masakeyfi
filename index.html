@@ -8,6 +8,45 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#062033;color:#fff;overflow:hidden;touch-action:none;}
 #lobby { position: fixed; inset: 0; display: none; flex-direction: column; overflow-y: auto; background: radial-gradient(circle at center, #1a4a6b, #062033); z-index: 500; }
+<div id="user-dashboard-bar" style="background: linear-gradient(90deg, #0a2b42, #164363); border-bottom: 2px solid #e8c84a; padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+    
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div id="user-avatar-container" style="position: relative;">
+            <img id="header-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ömer" style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid #e8c84a; background: #000;">
+            <div id="user-level-badge" style="position: absolute; bottom: -5px; right: -5px; background: #e8c84a; color: #1a1a00; font-weight: 900; font-size: 10px; padding: 2px 6px; border-radius: 10px; border: 1px solid #1a1a00;">LVL 1</div>
+        </div>
+        
+        <div>
+            <div id="header-username" style="font-weight: 800; font-size: 18px; color: #fff;">Misafir Oyuncu</div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <div style="width: 120px; height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                    <div id="xp-progress-bar" style="width: 30%; height: 100%; background: linear-gradient(90deg, #e8c84a, #fff); box-shadow: 0 0 10px rgba(232,200,74,0.5);"></div>
+                </div>
+                <span id="header-xp-text" style="font-size: 10px; color: rgba(255,255,255,0.6); font-weight: bold;">300 / 1000 XP</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 25px; text-align: center;" class="stats-group">
+        <div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Toplam Maç</div>
+            <div id="stat-total" style="font-weight: 900; color: #fff; font-size: 18px;">0</div>
+        </div>
+        <div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Galibiyet</div>
+            <div id="stat-wins" style="font-weight: 900; color: #44ff44; font-size: 18px;">0</div>
+        </div>
+        <div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Çipler</div>
+            <div id="stat-coins" style="font-weight: 900; color: #e8c84a; font-size: 18px;">1.000</div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <button onclick="openProfileSettings()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.3s;">⚙️ Ayarlar</button>
+        <button onclick="doLogout()" style="background: #ff4444; border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">Çıkış</button>
+    </div>
+</div>
 .lobby-header { background: rgba(0,0,0,0.5); border-bottom: 2px solid #e8c84a; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 .lobby-title { font-size: 24px; font-weight: 900; color: #e8c84a; letter-spacing: 1px; }
 .lobby-info { font-size: 13px; color: rgba(255,255,255,0.7); }
@@ -164,36 +203,87 @@ body{font-family:system-ui,sans-serif;background:#062033;color:#fff;overflow:hid
 .info-divider { width: 1px; height: 26px; background: rgba(255, 255, 255, 0.2); margin: 0 4px; }
 .horizontal-pinfo .p-timer { font-size: 11px; margin-bottom: 1px; min-width: unset; }
 .horizontal-pinfo .acilis-text { font-size: 9px; color: rgba(255, 255, 255, 0.6); margin-top: 0; }
+@keyframes modalPop {
+  0% { transform: scale(0.9) translateY(20px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+#auth-forms-container input:focus {
+  border-color: #e8c84a !important;
+  background: rgba(0,0,0,0.6) !important;
+  box-shadow: 0 0 15px rgba(232,200,74,0.1);
+}
 </style>
 </head>
 <body>
 <div id="ghost"></div>
 <div id="mode-badge" style="position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:3px 12px;font-size:11px;color:rgba(255,255,255,.7);z-index:10;pointer-events:none;display:none;"></div>
 
-<div id="auth-screen" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,#1a4a6b,#062033);z-index:2000;padding:20px;">
-  <div style="background:#062033;border:2px solid #e8c84a;border-radius:16px;padding:30px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.8);">
-    <div style="text-align:center;font-size:36px;font-weight:900;color:#e8c84a;margin-bottom:5px;letter-spacing:2px;">81 OKEY</div>
-    <div style="text-align:center;font-size:12px;color:rgba(255,255,255,.5);margin-bottom:20px;">Türkiye'nin En İyi Okey Deneyimi</div>
-    <div style="display:flex;margin-bottom:16px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.1);">
-      <div id="tab-giris" style="flex:1;padding:8px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;background:#e8c84a;color:#1a1a00;" onclick="switchAuthTab('giris')">Giriş Yap</div>
-      <div id="tab-kayit" style="flex:1;padding:8px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;background:rgba(0,0,0,.3);color:rgba(255,255,255,.5);" onclick="switchAuthTab('kayit')">Üye Ol</div>
+<div id="auth-screen" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background: url('https://images.unsplash.com/photo-1611195974226-a6a9be9dd763?q=80&w=1920') no-repeat center center fixed; background-size: cover; z-index: 2000; padding: 20px;">
+  <div style="position:absolute; inset:0; background:rgba(6, 32, 51, 0.85); backdrop-filter: blur(10px);"></div>
+  
+  <div style="position:relative; display:flex; width:100%; max-width:1000px; height:600px; background:rgba(10, 43, 66, 0.6); border:1px solid rgba(232, 200, 74, 0.3); border-radius:24px; box-shadow:0 40px 100px rgba(0,0,0,0.8); overflow:hidden; animation: modalPop 0.5s ease-out;">
+    
+    <div style="flex: 1; padding: 40px; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.05);">
+      <div style="text-align:center; margin-bottom: 30px;">
+        <div style="font-size:42px; font-weight:950; color:#e8c84a; letter-spacing:3px; text-shadow: 0 0 20px rgba(232,200,74,0.4);">MASAKEYFİ<span style="color:#fff">.ORG</span></div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:2px;">Türkiye'nin Dijital Kıraathanesi</div>
+      </div>
+
+      <div id="auth-forms-container" style="flex:1;">
+        <div style="display:flex; margin-bottom:20px; background:rgba(0,0,0,0.3); border-radius:12px; padding:4px;">
+          <button id="tab-giris" onclick="switchAuthTab('giris')" style="flex:1; padding:10px; border:none; border-radius:10px; background:#e8c84a; color:#1a1a00; font-weight:800; cursor:pointer; transition:0.3s;">Giriş Yap</button>
+          <button id="tab-kayit" onclick="switchAuthTab('kayit')" style="flex:1; padding:10px; border:none; border-radius:10px; background:transparent; color:#fff; font-weight:800; cursor:pointer; transition:0.3s;">Kayıt Ol</button>
+        </div>
+
+        <div id="auth-error" style="color:#ff6666; font-size:12px; text-align:center; margin-bottom:10px; min-height:16px;"></div>
+
+        <div id="auth-giris" style="display:flex; flex-direction:column; gap:12px;">
+          <input id="giris-email" type="email" placeholder="E-posta Adresi" style="width:100%; padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4); color:#fff; outline:none;">
+          <input id="giris-sifre" type="password" placeholder="Şifre" style="width:100%; padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4); color:#fff; outline:none;">
+          <button onclick="doGiris()" style="padding:15px; background:linear-gradient(135deg, #e8c84a, #ffcc44); color:#1a1a00; border:none; border-radius:12px; font-size:16px; font-weight:900; cursor:pointer; box-shadow:0 10px 20px rgba(232,200,74,0.2);">OYUNA BAŞLA</button>
+        </div>
+
+        <div id="auth-kayit" style="display:none; flex-direction:column; gap:12px;">
+          <input id="kayit-kullanici" type="text" placeholder="Kullanıcı Adı" style="width:100%; padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4); color:#fff; outline:none;">
+          <input id="kayit-email" type="email" placeholder="E-posta Adresi" style="width:100%; padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4); color:#fff; outline:none;">
+          <input id="kayit-sifre" type="password" placeholder="Şifre" style="width:100%; padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4); color:#fff; outline:none;">
+          <button onclick="doKayit()" style="padding:15px; background:#e8c84a; color:#1a1a00; border:none; border-radius:12px; font-size:16px; font-weight:900; cursor:pointer;">ÜYELİĞİ TAMAMLA</button>
+        </div>
+      </div>
+
+      <div style="margin-top:20px; display:flex; align-items:center; gap:10px;">
+        <button onclick="doMisafir()" style="flex:1; padding:12px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:12px; cursor:pointer;">👤 Misafir Girşi</button>
+      </div>
     </div>
-    <div id="auth-error" style="color:#ff6666;font-size:12px;text-align:center;margin-bottom:8px;min-height:16px;"></div>
-    <div id="auth-giris">
-      <input id="giris-email" type="email" placeholder="E-posta adresi" onkeydown="if(event.key==='Enter')document.getElementById('giris-sifre').focus()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
-      <input id="giris-sifre" type="password" placeholder="Şifre" onkeydown="if(event.key==='Enter')doGiris()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
-      <button onclick="doGiris()" style="width:100%;padding:12px;background:#e8c84a;color:#1a1a00;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">Giriş Yap</button>
+
+    <div style="flex: 1.2; background: rgba(0,0,0,0.4); padding: 30px; display: flex; flex-direction: column; gap: 20px;">
+      <div style="color:#e8c84a; font-weight:800; font-size:14px; text-transform:uppercase;">Aktif Oyunlar</div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+        <div style="background:linear-gradient(135deg, #c0802c, #8e5812); border-radius:16px; padding:20px; cursor:pointer; border:2px solid #e8c84a; box-shadow: 0 10px 20px rgba(0,0,0,0.4);">
+          <div style="font-size:24px; margin-bottom:5px;">🀄</div>
+          <div style="font-weight:900; font-size:18px;">81 OKEY</div>
+          <div style="font-size:11px; color:rgba(255,255,255,0.7);">Online • Realtime</div>
+        </div>
+        
+        <div style="background:rgba(255,255,255,0.03); border-radius:16px; padding:20px; border:2px dashed rgba(255,255,255,0.1); opacity:0.6;">
+          <div style="font-size:24px; margin-bottom:5px;">🃏</div>
+          <div style="font-weight:900; font-size:18px;">101 OKEY</div>
+          <div style="font-size:11px; color:#e8c84a;">ÇOK YAKINDA</div>
+        </div>
+      </div>
+
+      <div style="flex:1; background:rgba(0,0,0,0.3); border-radius:16px; display:flex; flex-direction:column; border:1px solid rgba(255,255,255,0.05);">
+        <div style="padding:10px 15px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12px; font-weight:700; color:rgba(255,255,255,0.5);">🌍 GENEL SOHBET (PORTAL)</div>
+        <div id="global-chat-messages" style="flex:1; padding:10px; overflow-y:auto; font-size:12px; display:flex; flex-direction:column; gap:8px;">
+          </div>
+        <div style="padding:10px; background:rgba(0,0,0,0.2); display:flex; gap:5px;">
+          <input placeholder="Lobiye bir mesaj bırak..." style="flex:1; padding:8px 12px; border-radius:8px; border:none; background:rgba(255,255,255,0.05); color:#fff; font-size:12px; outline:none;">
+          <button onclick="sendGlobalMessage()" style="padding:8px 12px; background:#e8c84a; color:#1a1a00; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">✉</button>
+        </div>
+      </div>
     </div>
-    <div id="auth-kayit" style="display:none;">
-      <input id="kayit-kullanici" type="text" placeholder="Kullanıcı adı" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
-      <input id="kayit-email" type="email" placeholder="E-posta adresi" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
-      <input id="kayit-sifre" type="password" placeholder="Şifre (min 6 karakter)" onkeydown="if(event.key==='Enter')doKayit()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
-      <button onclick="doKayit()" style="width:100%;padding:12px;background:#e8c84a;color:#1a1a00;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">Üye Ol</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;margin:12px 0;color:rgba(255,255,255,.3);font-size:12px;">
-      <div style="flex:1;height:1px;background:rgba(255,255,255,.15);"></div>veya<div style="flex:1;height:1px;background:rgba(255,255,255,.15);"></div>
-    </div>
-    <button onclick="doMisafir()" style="width:100%;padding:10px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">👤 Misafir Olarak Devam Et</button>
   </div>
 </div>
 

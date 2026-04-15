@@ -6,57 +6,148 @@ async function joinRoom(masaNo, settings) {
   
   myRoomId = rooms.id;
   currentRoomData = rooms;
-  const myName = (currentUser && currentProfile) ? currentProfile.username : (guestName || 'Misafir');
   
+  // ÖNEMLİ DÜZELTME: Her sekme için benzersiz bir geçici ID oluştur
   let myUserId;
-  if(currentUser) {
+  if(currentUser && !currentUser.is_anonymous) {
     myUserId = currentUser.id;
   } else {
-    let guestId = localStorage.getItem('81okey_guest_id');
-    if(!guestId) { guestId = 'guest-' + Date.now(); localStorage.setItem('81okey_guest_id', guestId); }
-    myUserId = guestId;
+    // Sekmeye özel ID: Sayfa her yenilendiğinde değil, sekme açık kaldığı sürece sabit kalır
+    myUserId = sessionStorage.getItem('temp_guest_id');
+    if(!myUserId) {
+        myUserId = 'guest-' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('temp_guest_id', myUserId);
+    }
   }
+
+  // Global değişkenler arasına ekle
+let globalChatSub = null;
+
+async function connectToGlobalChat() {
+    console.log("Global sohbete bağlanılıyor...");
+    const chatBox = document.getElementById('global-chat-messages');
+    if (!chatBox) return;
+
+    // 1. Önce son 20 mesajı veritabanından çekip ekrana basalım
+    const { data: oldMsgs, error } = await supa
+        .from('messages')
+        .select('*')
+        .eq('room_id', 'global_lobby') // Portalın ana odası
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+    if (oldMsgs) {
+        chatBox.innerHTML = ''; // Temizle
+        oldMsgs.reverse().forEach(msg => renderGlobalMessage(msg));
+    }
+
+    // 2. Yeni gelen mesajları anlık (Realtime) dinleyelim
+    if (globalChatSub) globalChatSub.unsubscribe(); // Varsa eskiyi kapat
+
+    globalChatSub = supa
+        .channel('public:messages')
+        .on('postgres_changes', { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'messages', 
+            filter: 'room_id=eq.global_lobby' 
+        }, payload => {
+            renderGlobalMessage(payload.new);
+        })
+        .subscribe();
+}
+
+// Mesajı ekrana basan yardımcı fonksiyon
+function renderGlobalMessage(msg) {
+    const chatBox = document.getElementById('global-chat-messages');
+    if (!chatBox) return;
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.style.marginBottom = "5px";
+    msgDiv.style.padding = "4px 8px";
+    msgDiv.style.background = "rgba(255,255,255,0.03)";
+    msgDiv.style.borderRadius = "6px";
+    
+    // Zamanı güzelleştirelim
+    const time = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    msgDiv.innerHTML = `
+        <span style="font-size:10px; color:rgba(255,255,255,0.3); float:right">${time}</span>
+        <b style="color:#e8c84a; font-size:11px;">${msg.guest_name || 'Oyuncu'}:</b> 
+        <span style="color:#eee; margin-left:5px;">${msg.content}</span>
+    `;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// --- 2. ADIM: MESAJ GÖNDERME FONKSİYONU ---
+async function sendGlobalMessage() {
+    // Giriş ekranındaki mesaj kutusunu buluyoruz
+    const input = document.querySelector('#auth-screen input[placeholder*="Lobiye"]');
+    if (!input) return;
+    
+    const content = input.value.trim();
+    if (!content) return;
+
+    // Gönderen ismini belirle: Giriş yapmışsa kullanıcı adı, yapmamışsa misafir adı
+    const senderName = (typeof currentUser !== 'undefined' && currentUser && typeof currentProfile !== 'undefined' && currentProfile) 
+                       ? currentProfile.username 
+                       : (typeof guestName !== 'undefined' ? guestName : 'Ziyaretçi');
+
+    // Supabase'e mesajı gönder
+    const { error } = await supa.from('messages').insert([{
+        room_id: 'global_lobby',
+        content: content,
+        guest_name: senderName,
+        user_id: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : null
+    }]);
+
+    if (error) {
+        console.error("Mesaj gönderilemedi:", error);
+    } else {
+        input.value = ''; // Mesaj gidince kutuyu temizle
+    }
+}
+
+// Enter tuşuna basıldığında mesajı gönderen dinleyiciyi ekle
+document.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        const activeInput = document.activeElement;
+        // Eğer odaklanılan kutu lobi mesaj kutusuysa gönder
+        if (activeInput && activeInput.placeholder && activeInput.placeholder.includes("Lobiye")) {
+            sendGlobalMessage();
+        }
+    }
+});
   
+  const myName = (currentUser && currentProfile) ? currentProfile.username : (guestName || 'Misafir');
+  
+  // Zaten masadaysam tekrar oturma
   for(let i = 0; i < 4; i++) {
-    if(rooms['seat' + i + '_user'] === myUserId) { alert('Bu masada zaten oturuyorsunuz!'); return false; }
+    if(rooms['seat' + i + '_user'] === myUserId) { mySeat = i; return true; }
   }
   
   let bosSeat = -1;
   for(let i = 0; i < 4; i++) {
     if(!rooms['seat' + i + '_user']) { bosSeat = i; break; }
   }
+  
   if(bosSeat === -1) { alert('Masa dolu!'); return false; }
   
   mySeat = bosSeat;
-  isMasaKurucu = (bosSeat === 0);
-  
   const update = {};
   update['seat' + bosSeat + '_user'] = myUserId;
   update['seat' + bosSeat + '_name'] = myName;
   
-  if(isMasaKurucu && settings) {
+  // Diğer ayarlar... (mevcut kodun devamı)
+  if(bosSeat === 0 && settings) {
+    update.status = 'waiting'; // Kurucu oturduğunda durum beklemede kalsın
     update.total_el = settings.totalEl;
     update.acilis_puan = settings.acilisPuan;
-    update.normal_time = settings.normalTime;
-    update.acik_time = settings.acikTime;
-    update.oyun_turu = settings.oyunTuru;
-    update.yardim_modu = settings.yardimModu;
-    update.diff = settings.diff;
+    // ... diğer ayarlar
   }
-  
-  if(!isMasaKurucu && rooms.total_el) {
-    G.totalEl = rooms.total_el;
-    G.acilisPuan = rooms.acilis_puan || 81;
-    G.normalTime = rooms.normal_time || 15;
-    G.acikTime = rooms.acik_time || 30;
-    G.diff = rooms.diff || 'medium';
-    G.isEsli = rooms.oyun_turu === 'esli';
-    G.yardim = rooms.yardim_modu !== 'yardimsiz';
-  }
-  
-  const {error: updateError} = await supa.from('rooms').update(update).eq('id', myRoomId);
-  if(updateError) { console.error('Koltuk alınamadı:', updateError); return false; }
-  
+
+  await supa.from('rooms').update(update).eq('id', myRoomId);
   return true;
 }
 

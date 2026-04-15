@@ -19,6 +19,8 @@ async function doGiris() {
   if (error) { document.getElementById('auth-error').textContent = 'Hata: ' + error.message; return; }
   
   currentUser = data.user; 
+  // Giriş başarılı olunca kullanıcı bilgilerini ekrana bas
+updateDashboardUI();
   await loadProfile(); 
   showLobby();
 }
@@ -89,4 +91,29 @@ async function doGuestCikis(confirm_needed = true) {
   document.getElementById('lobby').style.display = 'none'; 
   document.getElementById('game').style.display = 'none'; 
   document.getElementById('auth-screen').style.display = 'flex';
+}
+
+async function updateDashboardUI() {
+    if (!currentUser) return;
+
+    // Supabase'den profil bilgilerini çek
+    const { data: profile, error } = await supa
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+    if (profile) {
+        document.getElementById('header-username').innerText = profile.username || 'İsimsiz Oyuncu';
+        document.getElementById('header-avatar').src = profile.avatar_url;
+        document.getElementById('user-level-badge').innerText = `LVL ${profile.level}`;
+        document.getElementById('stat-total').innerText = profile.total_games;
+        document.getElementById('stat-wins').innerText = profile.wins;
+        document.getElementById('stat-coins').innerText = profile.coins.toLocaleString();
+        
+        // XP Bar Hesaplama (Örn: Her seviye 1000 XP)
+        const xpPercent = (profile.xp % 1000) / 10;
+        document.getElementById('xp-progress-bar').style.width = `${xpPercent}%`;
+        document.getElementById('header-xp-text').innerText = `${profile.xp % 1000} / 1000 XP`;
+    }
 }

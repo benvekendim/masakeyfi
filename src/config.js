@@ -1,6 +1,5 @@
-// Supabase Ayarları
-const SUPA_URL = 'https://nflxrfolzqecdxcptdmu.supabase.co';
-const SUPA_KEY = 'sb_publishable_EKiFP6Z_nU5Lx9b78hHMPQ_ncdM6ZKx';
+window.SUPA_URL = 'https://fviczkwqenvjijwolqdz.supabase.co';
+window.SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2aWN6a3dxZW52amlqd29scWR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NTM2OTMsImV4cCI6MjA5MTQyOTY5M30.FFPszVpQtjskW4a2u84ydBYKUAgoWfNsCdDfi1MqqQM';
 
 // Oyun Sabitleri
 const COLS = ['r','b','g','k'];
