@@ -336,3 +336,32 @@ function showSkorModal(){
   card.innerHTML = html;
   modal.classList.add('show');
 }
+
+// Oyun masasını ekrana göre otomatik boyutlandırır
+function resizeBoard() {
+    const board = document.getElementById('game-board');
+    const gameDiv = document.getElementById('game');
+    
+    // Sadece oyun ekranı açıksa işlem yap
+    if (!board || gameDiv.style.display === 'none') return;
+    
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    
+    // Senin orijinal masanın boyutları
+    const boardW = 1140; 
+    const boardH = 660;
+    
+    // Ekran masadan küçükse küçültme oranını hesapla
+    if(screenW < boardW || screenH < boardH) {
+        // Ekranın enine ve boyuna oranından en küçüğünü al ki sığsın
+        let scale = Math.min(screenW / boardW, screenH / boardH) - 0.02; // %2 kenar boşluğu
+        board.style.transform = `scale(${scale})`;
+    } else {
+        // Ekran büyükse orijinal boyutta bırak
+        board.style.transform = 'scale(1)';
+    }
+}
+
+// Ekran her döndüğünde veya boyutu değiştiğinde çalıştır
+window.addEventListener('resize', resizeBoard);
