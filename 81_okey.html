@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>81Okey</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#062033;color:#fff;overflow:hidden;touch-action:none;}
+#lobby { position: fixed; inset: 0; display: none; flex-direction: column; overflow-y: auto; background: radial-gradient(circle at center, #1a4a6b, #062033); z-index: 500; }
+.lobby-header { background: rgba(0,0,0,0.5); border-bottom: 2px solid #e8c84a; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+.lobby-title { font-size: 24px; font-weight: 900; color: #e8c84a; letter-spacing: 1px; }
+.lobby-info { font-size: 13px; color: rgba(255,255,255,0.7); }
+.tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 40px 20px; padding: 40px 20px; max-width: 1400px; margin: 0 auto; width: 100%; }
+.masa-wrapper { position: relative; width: 220px; height: 220px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.masa-board { background: linear-gradient(135deg, #c0802c, #8e5812); width: 120px; height: 120px; border-radius: 20px; border: 4px solid #5a3508; box-shadow: 0 10px 20px rgba(0,0,0,0.6), inset 0 0 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; }
+.masa-board span { color: #fff; font-weight: 900; font-size: 18px; text-shadow: 1px 1px 2px #000; }
+.masa-board small { color: rgba(255,255,255,0.6); font-size: 10px; font-weight: bold; margin-top: 5px; }
+.oyna-btn { position: absolute; background: #0a2b42; border: 3px solid #e8c84a; color: #e8c84a; font-weight: 800; border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; font-size: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 3; }
+.oyna-btn:hover { transform: scale(1.15); background: #e8c84a; color: #1a1a00; border-color: #fff; }
+.seat-top { top: 0; left: 50%; transform: translateX(-50%); }
+.seat-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
+.seat-left { top: 50%; left: 0; transform: translateY(-50%); }
+.seat-right { top: 50%; right: 0; transform: translateY(-50%); }
+.seat-top:hover { transform: translateX(-50%) scale(1.15); }
+.seat-bottom:hover { transform: translateX(-50%) scale(1.15); }
+.seat-left:hover { transform: translateY(-50%) scale(1.15); }
+.seat-right:hover { transform: translateY(-50%) scale(1.15); }
+#setup { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 1000; padding: 20px; backdrop-filter: blur(5px); }
+.setup-modal { background: #062033; border: 2px solid #e8c84a; border-radius: 16px; padding: 25px; width: 100%; max-width: 750px; position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column; gap: 20px; animation: modalPop 0.3s ease-out; }
+@keyframes modalPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.close-modal-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 28px; cursor: pointer; transition: color 0.2s; line-height: 1; }
+.close-modal-btn:hover { color: #ff4444; }
+.s-title { font-size: 24px; font-weight: 800; color: #e8c84a; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 5px; }
+.setup-body { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; } 
+@media (max-width: 600px) { .setup-body { grid-template-columns: 1fr; gap: 10px; } }
+.s-group { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
+.s-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 6px; display: block; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.s-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.s-row:last-child { margin-bottom: 0; }
+.cb { padding: 6px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.7); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.cb:hover { background: rgba(255,255,255,0.15); }
+.cb.on { background: #e8c84a; border-color: #e8c84a; color: #1a1a00; font-weight: 700; box-shadow: 0 0 10px rgba(232,200,74,0.3); }
+.s-input { width: 100%; border-radius: 8px; padding: 9px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 14px; margin-bottom: 15px; font-weight: bold; outline: none; }
+.s-input:focus { border-color: #e8c84a; }
+.start-btn { background: #e8c84a; color: #1a1a00; border: none; border-radius: 10px; padding: 14px; font-size: 16px; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.1s, background 0.2s; margin-top: 10px; }
+.start-btn:hover { background: #ffdf6a; transform: translateY(-2px); }
+.start-btn:active { transform: translateY(0); }
+#game{display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:radial-gradient(circle at center,#1a4a6b,#062033);}
+#game-board{width:1140px;height:660px;position:relative;transform-origin:center center;display:grid;grid-template-columns: 100px 1fr 100px;grid-template-rows: auto 1fr auto;grid-template-areas: ". top-bar ." "left center right" "bot bot bot";gap:2px 6px;padding:2px 6px;}
+.tile{width:46px;height:66px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;user-select:none;touch-action:none;flex-shrink:0;border:1px solid #ccc;background:#fcfcfc;box-shadow:inset -1px -2px 3px rgba(0,0,0,.2),1px 2px 3px rgba(0,0,0,.3);transition:transform .1s;position:relative;}
+.tile:active{cursor:grabbing}
+.tile.is-drag{opacity:.15}
+.tile.sel-t{transform:translateY(-6px);box-shadow:0 0 0 2px #fff,0 4px 10px rgba(0,0,0,.5)}
+.tile .tv{font-size:26px;font-weight:900;line-height:1;letter-spacing:-1px;margin-top:-2px;}
+.tile .tc{font-size:12px;font-weight:700;line-height:1;margin-top:2px;}
+.tile.r{border-color:#cc0000}.tile.r .tv,.tile.r .tc{color:#d61a1a}
+.tile.b{border-color:#0044cc}.tile.b .tv,.tile.b .tc{color:#1a75ff}
+.tile.g{border-color:#cc8800}.tile.g .tv,.tile.g .tc{color:#e6a800}
+.tile.k{border-color:#333}.tile.k .tv,.tile.k .tc{color:#111}
+.tile.ok{background:#1a0a3a;border-color:#e8c84a}.tile.ok .tv{color:#f5d84a;font-size:24px}.tile.ok .tc{color:#c8a830;font-size:11px}
+.tile.real-okey{border-color:#e8c84a !important;border-width:2px !important;box-shadow:0 0 8px rgba(232,200,74,.8),inset 0 0 6px rgba(232,200,74,.4) !important}
+.tile.real-okey .tc{color:#e8c84a !important;font-size:11px !important;font-weight:900 !important;background:#1a0a3a;padding:0 3px;border-radius:2px}
+.tile.sm{width:32px;height:46px; border-radius:6px;}.tile.sm .tv{font-size:16px; margin-top:-1px;}.tile.sm .tc{font-size:9px; margin-top:1px;}
+.isler-tas::after { content: ''; position: absolute; top: -1px; left: -1px; right: -1px; height: 5px; background: #33cc00; border-radius: 8px 8px 0 0; opacity: 0.95; border: 1px solid #228800; border-bottom: none; z-index: 2; pointer-events: none; }
+.side-strip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;}
+.side-strip.left{grid-area:left;}
+.side-strip.right{grid-area:right;}
+.player-info{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;border-radius:10px;background:rgba(0,0,0,.5);border:1.5px solid rgba(255,255,255,.1);transition:all .3s;min-width:70px;}
+.player-info.active-player{background:rgba(232,200,74,.2);border-color:#e8c84a;box-shadow:0 0 12px rgba(232,200,74,.5)}
+.avatar-box { width: 38px; height: 38px; border-radius: 50%; background: #1a4a6b; border: 2px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 5px; box-shadow: inset 0 0 5px rgba(0,0,0,.5); }
+.avatar-box img { width: 70%; height: 70%; object-fit: contain; }
+.pname{font-size:11px;font-weight:800;color:#fff;text-align:center;margin-bottom:2px;}
+.active-player .pname{color:#e8c84a !important}
+.pscore{font-size:10px;color:#aaa;font-weight:700;margin-bottom:2px;}
+.p-timer{font-size:11px;font-weight:900;color:#ffdd55;height:14px;line-height:14px;min-width:38px;text-align:center;white-space:nowrap;overflow:hidden;}
+.p-timer.warn {color:#ff4444;animation:pulse 1s infinite}
+.acilis-text {font-size:9px;color:#88ff88;font-weight:bold;margin-top:4px;text-align:center;line-height:1.2;}
+.deck-pile{width:46px;height:66px;border-radius:8px;background:linear-gradient(135deg,#9B3A0A,#6B2008);border:1.5px solid rgba(255,255,255,.25);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:2px 2px 5px rgba(0,0,0,.4);}
+.deck-pile .dc{font-size:18px;font-weight:700;color:#fff}
+.deck-pile .dl{font-size:10px;color:rgba(255,255,255,.6)}
+.gosterge-box{width:46px;height:66px;border-radius:8px;border:1.5px solid rgba(232,200,74,.5);display:flex;align-items:center;justify-content:center;background:rgba(232,200,74,.07);}
+.disc-pile-player{width:46px;height:66px;border-radius:8px;border:2px dashed rgba(232,200,74,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;background:rgba(0,0,0,.2);flex-shrink:0}
+.disc-pile-player.has{border-style:solid;border-color:rgba(232,200,74,.7)}
+.disc-pile-player.drop-fin{border-color:#e8c84a !important;background:rgba(232,200,74,.22) !important;border-style:solid !important}
+.disc-opp-v{width:46px;height:66px;border-radius:8px;border:1.5px dashed rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;}
+.disc-pile-opp{width:46px;height:66px;border-radius:8px;border:1.5px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;}
+.center-area{grid-area:center;display:flex;flex-direction:column;gap:3px;min-height:0;}
+.top-bar{grid-area:top-bar;display:flex;align-items:flex-end;justify-content:space-between;gap:6px;height:auto;min-height:48px;padding-bottom:2px;padding-top:2px;}
+.bot2-area{flex:1;display:flex;flex-direction:row;align-items:flex-end;justify-content:center;gap:15px;padding-top:0;}
+.info-box{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:5px 8px;font-size:10px;}
+.scores-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;}
+.sr{font-size:10px;color:rgba(255,255,255,.7);display:flex;gap:3px;white-space:nowrap;}
+.sr b{color:#fff}.sr.me b{color:#e8c84a}
+.chip{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:5px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,.7);white-space:nowrap;}
+.chip.hl{color:#e8c84a;border-color:rgba(232,200,74,.4)}
+#table-area { background: #0a2b42; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; flex: 1; display: flex; flex-direction: row; justify-content: flex-end; overflow: hidden; min-height: 0; padding: 6px 12px 6px 6px; gap: 8px; }
+.ta-col { display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,.1); padding-right: 8px; }
+.ta-col:last-child { border-right: none; padding-right: 0; }
+.ta-head { font-size:11px;color:rgba(255,255,255,.6);text-align:center;font-weight:800;margin-bottom:3px; }
+#table-series, #table-pers, #table-pairs { display: flex; flex-direction: column; gap: 2px; overflow: hidden; flex: 1; border: none !important; padding: 0 !important; }
+.series-row, .per-row { display: flex; justify-content: center; gap: 1px; background: rgba(0,0,0,.2); border-radius: 4px; height: 48px; border: 1px solid transparent; transition: border-color 0.15s, background-color 0.15s; }
+.pair-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; height: 48px; }
+.pair-cell { display: flex; justify-content: center; gap: 1px; background: rgba(0,0,0,.2); border-radius: 4px; height: 100%; border: 1px solid transparent; transition: border-color 0.15s, background-color 0.15s; }
+.open-group-row { cursor: pointer; background: rgba(0,0,0,.4); border-color: rgba(255,255,255,.15); }
+.open-group-row:hover, .open-group-row.hov { background: rgba(100,255,100,.15) !important; border-color: #88ff88 !important; }
+.has-pair { cursor: pointer; background: rgba(0,0,0,.4); border-color: rgba(255,255,255,.15); }
+.has-pair:hover, .has-pair.hov { background: rgba(100,255,100,.15) !important; border-color: #88ff88 !important; }
+.board-cell { width: 32px; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.03); border-radius: 3px; }
+.tile.board { width: 100%; height: 100%; border-radius: 3px; border-width: 1px; margin: 0; box-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+.tile.board .tv { font-size: 20px; letter-spacing: -1px; line-height: 1; margin-top: -2px; }
+.tile.board .tc { font-size: 11px; margin-top: 1px; }
+.msg{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:4px 10px;font-size:10px;color:#fff;text-align:center;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bottom-area{grid-area:bot;display:flex;align-items:flex-end;justify-content:center;gap:15px;}
+.rack-outer{background:linear-gradient(180deg,#dca14c,#c0802c);border:2px solid #eebb77;border-bottom:4px solid #8e5812;border-radius:5px;padding:4px;display:flex;flex-direction:column;gap:3px;box-shadow:inset 0 2px 8px rgba(0,0,0,.5),0 4px 12px rgba(0,0,0,.4); position:relative; z-index:3;}
+.rack-row{display:flex;gap:1px;min-height:68px;align-items:center;flex-wrap:nowrap;overflow-x:auto;padding:1px;scrollbar-width:none;}
+.rack-divider{height:2px;background:rgba(0,0,0,.4);border-radius:1px}
+.rack-outer .slot {width:46px;height:66px;border-radius:8px;border:1.5px dashed rgba(255,255,255,.2);flex-shrink:0;transition:all .1s}
+.rack-outer .slot.hov {background:rgba(232,200,74,.22);border-color:#e8c84a;border-style:solid}
+@keyframes pulse-green{0%{box-shadow:0 0 6px rgba(100,255,100,.4)}50%{box-shadow:0 0 14px rgba(100,255,100,.9);border-color:#aaffaa}100%{box-shadow:0 0 6px rgba(100,255,100,.4)}}
+.disc-pile-opp.takeable{border-color:#88ff88 !important;cursor:pointer;animation:pulse-green 1.5s infinite;}
+@keyframes pulse{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
+.acts-col { display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; min-width: 120px; height: 180px; padding-bottom: 4px;}
+.acts-col .btn { padding: 7px 10px; font-size: 12px; border-radius: 8px; width: 100%; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-weight:700; cursor:pointer; border:2px solid; transition:all .12s; white-space:nowrap; }
+.btn-mode{background:#c06000;border-color:#e07818;color:#fff8ee}
+.btn-mode:hover,.btn-mode.on{background:#ff8c00;border-color:#ffb040;color:#fff}
+.btn-ac{background:#1a6600;border-color:#33cc00;color:#ccffaa}
+.btn-ac:hover:not(:disabled){background:#228800}
+.btn-ac:disabled{background:#2a3a2a;border-color:#445544;color:#556655;cursor:default}
+.btn-isle{background:#005a88;border-color:#0088cc;color:#cceeff}
+.btn-isle:disabled{background:#223344;border-color:#445566;color:#667788;cursor:default}
+.btn-at{background:#aa1818;border-color:#ee3030;color:#fff}
+.btn-at:disabled{background:#3a2a2a;border-color:#554444;color:#886666;cursor:default}
+#timer-chip{font-weight:800;text-align:center;transition:color .2s;}
+#ac-panel{display:none;position:absolute;bottom:150px;left:50%;transform:translateX(-50%);background:#0a2e18;border:2px solid #e8c84a;border-radius:10px;padding:12px;z-index:100;min-width:280px;max-width:360px;width:90%}
+#ac-panel h3{color:#e8c84a;font-size:13px;margin-bottom:8px;text-align:center}
+#ac-sel-tiles{display:flex;gap:3px;flex-wrap:wrap;min-height:46px;background:rgba(0,0,0,.3);border-radius:7px;padding:6px;margin-bottom:8px}
+.ac-pts{font-size:11px;color:rgba(255,255,255,.7);text-align:center;margin-bottom:6px}
+.ac-pts span{color:#e8c84a;font-weight:700}
+#ac-btns{display:flex;gap:6px;justify-content:center}
+.btn-ac-ok{padding:8px 18px;border-radius:7px;background:#22aa00;border:2px solid #44dd11;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.btn-ac-ok:disabled{background:#334433;border-color:#445544;color:#778877;cursor:default}
+.btn-ac-cancel{padding:8px 14px;border-radius:7px;background:#444;border:2px solid #666;color:#ccc;font-size:12px;cursor:pointer}
+#reject-modal, #skor-modal, .end-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center}
+.show{display:flex !important}
+.skor-card, .end-card{background:#0a2e18;border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:16px;max-width:700px;width:95%;text-align:center;}
+.skor-card h2, .end-card h2{color:#e8c84a;font-size:18px;margin-bottom:15px; font-weight:800;}
+.skor-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;text-align:center;}
+.skor-table th{color:#e8c84a;padding:8px 5px;border-bottom:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.3);}
+.skor-table td{padding:6px 5px;border-bottom:1px dashed rgba(255,255,255,.1);color:rgba(255,255,255,.9); border-left:1px solid rgba(255,255,255,.05); border-right:1px solid rgba(255,255,255,.05);}
+.skor-table tr:last-child td{border-bottom:none;}
+.skor-table .ceza{color:#ff8888}.skor-table .bonus{color:#88ff88}
+.devam-btn, .btn-new{padding:10px;background:#e8c84a;color:#1a1a00;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;width:100%;max-width:300px;margin:15px auto 0 auto;display:block;}
+#ghost{position:fixed;pointer-events:none;z-index:9999;display:none;width:46px;height:66px;border-radius:8px;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:2px solid #e8c84a;box-shadow:0 6px 20px rgba(0,0,0,.7);font-weight:900}
+@keyframes floatUp{0%{opacity:1;transform:translate(-50%,-50%) scale(.5)}15%{transform:translate(-50%,-50%) scale(1.2)}30%{transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-150%) scale(1)}}
+.horizontal-pinfo { flex-direction: row; gap: 10px; padding: 6px 14px; border-radius: 10px; background: rgba(10, 43, 66, 0.9); border: 1.5px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+#pinfo-0.horizontal-pinfo { border-color: #e8c84a; }
+.horizontal-pinfo .avatar-box { margin-bottom: 0; width: 32px; height: 32px; }
+.info-col { display: flex; flex-direction: column; justify-content: center; }
+.info-col.left { align-items: flex-start; }
+.info-col.right { align-items: flex-end; }
+.horizontal-pinfo .pname { font-size: 13px; margin-bottom: 1px; }
+.horizontal-pinfo .pscore { font-size: 10px; margin-bottom: 0; }
+.info-divider { width: 1px; height: 26px; background: rgba(255, 255, 255, 0.2); margin: 0 4px; }
+.horizontal-pinfo .p-timer { font-size: 11px; margin-bottom: 1px; min-width: unset; }
+.horizontal-pinfo .acilis-text { font-size: 9px; color: rgba(255, 255, 255, 0.6); margin-top: 0; }
+</style>
+</head>
+<body>
+<div id="ghost"></div>
+<div id="mode-badge" style="position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:3px 12px;font-size:11px;color:rgba(255,255,255,.7);z-index:10;pointer-events:none;display:none;"></div>
+
+<div id="auth-screen" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,#1a4a6b,#062033);z-index:2000;padding:20px;">
+  <div style="background:#062033;border:2px solid #e8c84a;border-radius:16px;padding:30px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.8);">
+    <div style="text-align:center;font-size:36px;font-weight:900;color:#e8c84a;margin-bottom:5px;letter-spacing:2px;">81 OKEY</div>
+    <div style="text-align:center;font-size:12px;color:rgba(255,255,255,.5);margin-bottom:20px;">Türkiye'nin En İyi Okey Deneyimi</div>
+    <div style="display:flex;margin-bottom:16px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.1);">
+      <div id="tab-giris" style="flex:1;padding:8px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;background:#e8c84a;color:#1a1a00;" onclick="switchAuthTab('giris')">Giriş Yap</div>
+      <div id="tab-kayit" style="flex:1;padding:8px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;background:rgba(0,0,0,.3);color:rgba(255,255,255,.5);" onclick="switchAuthTab('kayit')">Üye Ol</div>
+    </div>
+    <div id="auth-error" style="color:#ff6666;font-size:12px;text-align:center;margin-bottom:8px;min-height:16px;"></div>
+    <div id="auth-giris">
+      <input id="giris-email" type="email" placeholder="E-posta adresi" onkeydown="if(event.key==='Enter')document.getElementById('giris-sifre').focus()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
+      <input id="giris-sifre" type="password" placeholder="Şifre" onkeydown="if(event.key==='Enter')doGiris()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
+      <button onclick="doGiris()" style="width:100%;padding:12px;background:#e8c84a;color:#1a1a00;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">Giriş Yap</button>
+    </div>
+    <div id="auth-kayit" style="display:none;">
+      <input id="kayit-kullanici" type="text" placeholder="Kullanıcı adı" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
+      <input id="kayit-email" type="email" placeholder="E-posta adresi" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
+      <input id="kayit-sifre" type="password" placeholder="Şifre (min 6 karakter)" onkeydown="if(event.key==='Enter')doKayit()" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;">
+      <button onclick="doKayit()" style="width:100%;padding:12px;background:#e8c84a;color:#1a1a00;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">Üye Ol</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin:12px 0;color:rgba(255,255,255,.3);font-size:12px;">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.15);"></div>veya<div style="flex:1;height:1px;background:rgba(255,255,255,.15);"></div>
+    </div>
+    <button onclick="doMisafir()" style="width:100%;padding:10px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">👤 Misafir Olarak Devam Et</button>
+  </div>
+</div>
+
+<div id="profile-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;align-items:center;justify-content:center;">
+  <div style="background:#062033;border:2px solid #e8c84a;border-radius:16px;padding:24px;max-width:420px;width:90%;">
+    <h2 style="color:#e8c84a;font-size:18px;margin-bottom:16px;text-align:center;">👤 Profilim</h2>
+    <div id="profile-content"></div>
+    <button onclick="document.getElementById('profile-modal').style.display='none'" style="width:100%;padding:12px;background:#e8c84a;color:#1a1a00;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;margin-top:16px;">Kapat</button>
+  </div>
+</div>
+
+<div id="chat-panel" style="position:fixed;right:0;top:0;bottom:0;width:260px;background:#071e2e;border-left:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;z-index:50;transform:translateX(100%);transition:transform .3s;">
+  <div style="padding:10px 14px;background:#0a2b42;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:13px;font-weight:700;color:#e8c84a;">💬 Sohbet</span>
+    <button onclick="toggleChat()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1;">×</button>
+  </div>
+  <div id="chat-messages" style="flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px;"></div>
+  <div style="padding:10px;border-top:1px solid rgba(255,255,255,.1);display:flex;gap:6px;">
+    <input id="chat-input" placeholder="Mesaj yaz..." onkeydown="if(event.key==='Enter')sendChatMsg()" style="flex:1;padding:7px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#fff;font-size:12px;outline:none;">
+    <button onclick="sendChatMsg()" style="padding:7px 12px;background:#e8c84a;color:#1a1a00;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">Gönder</button>
+  </div>
+</div>
+<button id="chat-toggle" onclick="toggleChat()" style="position:fixed;right:10px;bottom:120px;z-index:60;width:44px;height:44px;border-radius:50%;background:#e8c84a;color:#1a1a00;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;">💬</button>
+
+<div id="lobby">
+  <div class="lobby-header">
+      <div class="lobby-title">81 OKEY LOBİSİ</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="lobby-avatar" style="width:32px;height:32px;border-radius:50%;background:#1a4a6b;border:2px solid #e8c84a;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#e8c84a;">?</div>
+        <div>
+          <div id="lobby-username" style="font-size:13px;font-weight:700;color:#fff;">...</div>
+          <div id="lobby-score" style="font-size:11px;color:rgba(255,255,255,.5);"></div>
+          <div id="lobby-masa-durum" style="font-size:11px;color:#88ff88;font-weight:700;display:none;"></div>
+        </div>
+        <button onclick="showProfile()" id="profil-btn" style="padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:700;border:1px solid rgba(232,200,74,.5);background:rgba(232,200,74,.15);color:#e8c84a;">Profil</button>
+        <button id="logout-btn" onclick="doLogout()" style="padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:700;border:1px solid rgba(255,0,0,.3);background:rgba(255,0,0,.15);color:#ff8888;">Çıkış</button>
+        <button id="guest-giris-btn" onclick="doGuestGiris()" style="display:none;padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:700;border:1px solid rgba(100,200,255,.4);background:rgba(100,200,255,.15);color:#88ddff;">Giriş Yap</button>
+        <button id="guest-cikis-btn" onclick="doGuestCikis()" style="display:none;padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:700;border:1px solid rgba(255,150,0,.4);background:rgba(255,150,0,.1);color:#ffaa44;">Yok Ol</button>
+      </div>
+  </div>
+  <div class="tables-grid" id="tables-grid">
+  </div>
+</div>
+
+<div id="setup">
+  <div class="setup-modal">
+    <button class="close-modal-btn" onclick="closeSetup()">&times;</button>
+    <div class="s-title">Masaya Otur & Oyunu Kur</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="cb on" id="mod-online" onclick="pickMod('online')" style="flex:1;padding:10px;font-size:13px;text-align:left;">
+        🌐 <b>Çevrimiçi</b><br><span style="font-size:10px;font-weight:400;opacity:.7;">Gerçek oyuncular • XP & Rating kazanırsın</span>
+      </button>
+      <button class="cb" id="mod-bot" onclick="pickMod('bot')" style="flex:1;padding:10px;font-size:13px;text-align:left;">
+        🤖 <b>Tek Başına</b><br><span style="font-size:10px;font-weight:400;opacity:.7;">3 bot ile oyna • XP kazanılmaz</span>
+      </button>
+    </div>
+    
+    <div class="setup-body">
+        <div class="s-group">
+            <span class="s-label">Oyuncu Adın</span>
+            <input class="s-input" id="pname" value="Ömer" placeholder="Adınızı girin">
+            
+            <span class="s-label">Oyun Türü</span>
+            <div class="s-row" id="oyunTuru">
+              <button class="cb on" data-v="bireysel" onclick="pick(this,'oyunTuru')">Bireysel</button>
+              <button class="cb" data-v="esli" onclick="pick(this,'oyunTuru')">Eşli (Ortaklı)</button>
+            </div>
+            
+            <span class="s-label">Yardım Modu</span>
+            <div class="s-row" id="yardimModu">
+              <button class="cb on" data-v="yardimli" onclick="pick(this,'yardimModu')">Yardımlı (Kolay)</button>
+              <button class="cb" data-v="yardimsiz" onclick="pick(this,'yardimModu')">Yardımsız (Zor)</button>
+            </div>
+
+            <span class="s-label">Bot Zorluğu</span>
+            <div class="s-row" id="diffs">
+              <button class="cb" data-v="easy" onclick="pick(this,'diffs')">Kolay</button>
+              <button class="cb on" data-v="medium" onclick="pick(this,'diffs')">Orta</button>
+              <button class="cb" data-v="hard" onclick="pick(this,'diffs')">Zor</button>
+            </div>
+        </div>
+
+        <div class="s-group">
+            <span class="s-label">Kaç El Oynanacak?</span>
+            <div class="s-row" id="elSayisi">
+              <button class="cb" data-v="1" onclick="pick(this,'elSayisi')">1 El</button>
+              <button class="cb" data-v="3" onclick="pick(this,'elSayisi')">3 El</button>
+              <button class="cb on" data-v="5" onclick="pick(this,'elSayisi')">5 El</button>
+              <button class="cb" data-v="9" onclick="pick(this,'elSayisi')">9 El</button>
+              <button class="cb" data-v="11" onclick="pick(this,'elSayisi')">11 El</button>
+            </div>
+            
+            <span class="s-label">Açılış Puanı (Min)</span>
+            <div class="s-row" id="acilis">
+              <button class="cb on" data-v="81" onclick="pick(this,'acilis')">81 Puan</button>
+              <button class="cb" data-v="101" onclick="pick(this,'acilis')">101 Puan</button>
+            </div>
+            
+            <span class="s-label">Tur Süresi (Saniye)</span>
+            <div class="s-row" id="normal-sure">
+              <button class="cb" data-v="10" onclick="pick(this,'normal-sure')">10</button>
+              <button class="cb on" data-v="15" onclick="pick(this,'normal-sure')">15</button>
+              <button class="cb" data-v="20" onclick="pick(this,'normal-sure')">20</button>
+              <button class="cb" data-v="30" onclick="pick(this,'normal-sure')">30</button>
+            </div>
+            
+            <span class="s-label">Açık El Süresi (Saniye)</span>
+            <div class="s-row" id="acik-sure">
+              <button class="cb" data-v="20" onclick="pick(this,'acik-sure')">20</button>
+              <button class="cb on" data-v="30" onclick="pick(this,'acik-sure')">30</button>
+              <button class="cb" data-v="40" onclick="pick(this,'acik-sure')">40</button>
+            </div>
+        </div>
+    </div>
+    
+    <button class="start-btn" onclick="startGame()">Hemen Oyuna Başla ►</button>
+  </div>
+</div>
+
+<div id="game">
+ <div id="game-board">
+  
+  <div class="side-strip left">
+    <div class="player-info" id="pinfo-3">
+        <div class="avatar-box"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="avatar"></div>
+        <div class="pname" id="n3">Bot 3</div>
+        <div class="pscore" id="s3">0</div>
+        <div class="p-timer" id="timer-3"></div>
+        <div class="acilis-text" id="acilis-text-3"></div>
+    </div>
+    <div class="disc-opp-v disc-pile-opp" id="disc-opp3" title="Taşı al"><span style="font-size:11px;color:rgba(255,255,255,.3)">atık</span></div>
+  </div>
+
+  <div class="top-bar">
+      <div class="info-box">
+        <div class="scores-grid">
+          <div class="sr me"><span id="sc-n0">Sen:</span><b id="sc-v0">0</b></div><div class="sr"><span id="sc-n2">Bot 2:</span><b id="sc-v2">0</b></div>
+          <div class="sr"><span id="sc-n1">Bot 1:</span><b id="sc-v1">0</b></div><div class="sr"><span id="sc-n3">Bot 3:</span><b id="sc-v3">0</b></div>
+        </div>
+        <div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;">
+          <div class="chip hl" id="el-chip">El: 1/5</div><div class="chip" id="acilis-chip">81p</div><div class="chip" style="color:#e8c84a;border-color:rgba(232,200,74,.3);" id="okey-bar">Okey:—</div>
+        </div>
+      </div>
+      
+      <div class="bot2-area">
+        <div class="player-info horizontal-pinfo" id="pinfo-2">
+            <div class="avatar-box"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="avatar"></div>
+            <div class="info-col left">
+                <div class="pname" id="n2">Bot 2</div>
+                <div class="pscore" id="s2">0 Puan</div>
+            </div>
+            <div class="info-divider"></div>
+            <div class="info-col right">
+                <div class="p-timer" id="timer-2"></div>
+                <div class="acilis-text" id="acilis-text-2"></div>
+            </div>
+        </div>
+        <div class="disc-pile-opp" id="disc-opp2" title="Taşı al"><span style="font-size:11px;color:rgba(255,255,255,.3)">atık</span></div>
+      </div>
+
+      <div class="info-box" style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+        <div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
+          <div class="chip hl" id="turn-chip">Sıra:—</div><div class="chip" id="timer-chip" style="color:#ffdd55;">⏳--s</div><div class="chip" id="deck-chip">Deste:—</div>
+          <button onclick="lobiyeDon()" style="padding:5px 14px;background:#cc2200;border:2px solid #ff4422;color:#fff;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">🚪 Masadan Çık</button>
+        </div>
+        <div class="msg" id="msg">Yükleniyor...</div>
+      </div>
+  </div>
+  
+  <div class="center-area">
+    <div id="table-area">
+        <div class="ta-col">
+            <div class="ta-head">Seriler (1-13)</div>
+            <div id="table-series"></div>
+        </div>
+        <div class="ta-col">
+            <div class="ta-head">Perler</div>
+            <div id="table-pers"></div>
+        </div>
+        <div class="ta-col">
+            <div class="ta-head">Çiftler</div>
+            <div id="table-pairs"></div>
+        </div>
+    </div>
+  </div>
+
+  <div class="side-strip right">
+    <div class="disc-opp-v disc-pile-opp" id="disc-opp1" title="Taşı al"><span style="font-size:11px;color:rgba(255,255,255,.3)">atık</span></div>
+    <div class="player-info" id="pinfo-1">
+        <div class="avatar-box"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="avatar"></div>
+        <div class="pname" id="n1">Bot 1</div>
+        <div class="pscore" id="s1">0</div>
+        <div class="p-timer" id="timer-1"></div>
+        <div class="acilis-text" id="acilis-text-1"></div>
+    </div>
+  </div>
+
+  <div class="bottom-area">
+    <div style="display:flex;flex-direction:column;align-items:center; width:100%; justify-content: flex-end; padding-bottom: 2px;">
+        
+        <div style="width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 0 10px;">
+            
+            <div style="display:flex; gap:10px;">
+                <div class="deck-pile" id="deck-btn" onclick="drawDeck()">
+                    <span class="dc" id="dc" style="font-size:18px;">0</span>
+                    <span class="dl" style="font-size:10px;">taş</span>
+                </div>
+                <div class="gosterge-box" id="gosterge-area"></div>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 15px; z-index: 5;">
+                <div style="background:rgba(0,0,0,.6); padding:6px 12px; border-radius:10px; border:1.5px solid rgba(238, 187, 119, 0.4); display:flex; flex-direction:column; align-items:flex-end; justify-content:center; min-width:110px; height: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                    <div id="rack-score-box" style="font-size:12px;color:rgba(255,255,255,.9);font-weight:700; margin-bottom:2px;">Sayı: <span id="rack-score" style="color:#e8c84a;font-weight:900;font-size:16px;">0</span></div>
+                    <div id="rack-score-detail" style="font-size:10px;color:rgba(255,255,255,.5);font-weight:600; text-align:right; line-height: 1.1;"></div>
+                </div>
+                
+                <div class="player-info horizontal-pinfo" id="pinfo-0" style="margin: 0; min-width: 210px; height: 50px;">
+                    <div class="avatar-box"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e8c84a'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="avatar"></div>
+                    <div class="info-col left">
+                        <div class="pname" id="n0">Sen</div>
+                        <div class="pscore" id="s0">0 Puan</div>
+                    </div>
+                    <div class="info-divider"></div>
+                    <div class="info-col right">
+                        <div class="p-timer" id="timer-0"></div>
+                        <div class="acilis-text" id="acilis-status">Henüz açılmadın</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="disc-pile-player" id="disc-player"><div id="disc-player-top"><span style="font-size:11px;color:rgba(255,255,255,.3)">atık</span></div></div>
+        </div>
+        
+        <div style="display: flex; flex-direction: row; align-items: flex-end; justify-content: center; gap: 30px; width: 100%;">
+            
+            <div class="acts-col">
+                <button class="btn btn-mode on" id="btn-diz" onclick="doSort('diz')">Diz</button>
+                <button class="btn btn-mode" id="btn-cift" onclick="doSort('cift')">Çift</button>
+                <button class="btn btn-mode" id="btn-cifte-git" onclick="doCifteGit()" style="background:#800080;border-color:#a020a0;color:#fff;">Çifte Git</button>
+                <button class="btn" id="geri-al-btn" onclick="doGeriAl()" style="background:#5a0000;border-color:#cc2200;color:#ffaaaa;display:none">Geri Al (+81)</button>
+
+            </div>
+
+            <div class="rack-outer">
+                <div class="rack-row" id="row0"></div><div class="rack-divider"></div><div class="rack-row" id="row1"></div>
+            </div>
+            
+            <div class="acts-col">
+                <button class="btn btn-ac" id="ac-btn" onclick="showAcPanel()" disabled>Aç!</button>
+                <button class="btn btn-ac" id="auto-ac-seri-btn" onclick="doAutoAcSeri()" disabled style="background:#0a5a00;border-color:#22cc00">Seri Aç</button>
+                <button class="btn btn-ac" id="auto-ac-cift-btn" onclick="doAutoAcCift()" disabled style="background:#4a0080;border-color:#8000ff;color:#fff;">Çift Aç</button>
+                <button class="btn btn-isle" id="oto-isle-btn" onclick="doOtoIsle()" disabled style="display:none;">İşle</button>
+                <button class="btn btn-at" id="disc-btn" onclick="discardSelected()" disabled>Taşı At</button>
+                <button class="btn" id="btn-tasi-birak" onclick="doTasiBirak()" style="background:#995522;border-color:#cc7733;color:#fff;display:none">Bırak</button>
+            </div>
+
+        </div>
+
+    </div>
+  </div>
+  
+  <div id="ac-panel">
+    <h3>Taş Seç — Grup Oluştur ve Aç</h3><div id="ac-sel-tiles"></div>
+    <div class="ac-pts">Durum: <span id="ac-pts-min">0</span> | <span id="ac-status">—</span></div>
+    <div id="ac-btns"><button class="btn-ac-ok" id="ac-ok-btn" onclick="doAc()">Aç!</button><button class="btn-ac-cancel" onclick="hideAcPanel()">İptal</button></div>
+  </div>
+  
+  <div id="reject-modal" class="end-wrap">
+    <div class="end-card" style="max-width:320px;">
+      <h2 style="color:#ff4444; font-size:16px; margin-bottom:10px;">Taş İzni Reddedildi!</h2>
+      <p id="reject-text" style="font-size:12px; margin-bottom:15px; color:#ddd; line-height:1.4;"></p>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button class="btn-new" style="background:#555; color:#fff;" onclick="onRejectVazgec()">Vazgeç</button>
+        <button class="btn-new" style="background:#800080; color:#fff;" onclick="onRejectCifteGit()">Çifte Git (Zorla Al)</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="skor-modal">
+    <div class="skor-card" id="skor-modal-content">
+        </div>
+  </div>
+  <div class="end-wrap" id="end-wrap">
+    <div class="end-card">
+      <div style="font-size:52px;margin-bottom:8px" id="end-icon">🏆</div>
+      <h2 id="end-title" style="font-size:26px;margin-bottom:8px;">—</h2>
+      <div id="end-scores" style="background:rgba(0,0,0,.3);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;line-height:2;text-align:left;min-width:280px;"></div>
+      <p id="end-text" style="font-size:11px;margin-bottom:12px;color:rgba(255,255,255,.5);">—</p>
+      <button class="btn-new" onclick="goToLobby()">🏠 Lobiye Dön</button>
+    </div>
+  </div>
+ </div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/config.js"></script>
+<script src="src/supabaseClient.js"></script>
+<script src="src/state.js"></script>
+<script src="src/utils.js"></script>
+<script src="src/gameState.js"></script>
+<script src="src/auth.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/gameLogic.js"></script>
+<script src="src/bot.js"></script>
+<script src="src/multiplayer.js"></script>
+<script src="src/main.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/config.js"></script>
+<script src="src/supabaseClient.js"></script>
+<script src="src/state.js"></script>
+<script src="src/utils.js"></script>
+<script src="src/gameState.js"></script>
+<script src="src/auth.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/gameLogic.js"></script>
+<script src="src/bot.js"></script>
+<script src="src/multiplayer.js"></script>
+<script src="src/main.js"></script>
+
+</body>
+</html>
