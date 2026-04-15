@@ -117,3 +117,28 @@ async function updateDashboardUI() {
         document.getElementById('header-xp-text').innerText = `${profile.xp % 1000} / 1000 XP`;
     }
 }
+
+// src/auth.js en altı
+async function checkAdminStatus() {
+    if (!currentUser) return;
+    
+    const { data: profile, error } = await supa
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUser.id)
+        .single();
+
+    if (profile && profile.role === 'admin') {
+        console.log("Patron hoş geldin!");
+        // Eğer admin panel butonu henüz yoksa ekle
+        if (!document.getElementById('admin-btn-nav')) {
+            const navContainer = document.querySelector('#user-dashboard-bar div:last-child');
+            const adminBtn = document.createElement('button');
+            adminBtn.id = 'admin-btn-nav';
+            adminBtn.innerHTML = "👑 Panel";
+            adminBtn.style.cssText = "background: #e8c84a; color: #1a1a00; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold;";
+            adminBtn.onclick = () => document.getElementById('admin-panel').style.display = 'block';
+            navContainer.prepend(adminBtn); // Çıkış butonunun yanına koyar
+        }
+    }
+}
