@@ -27,7 +27,26 @@ body{font-family:system-ui,sans-serif;background:#062033;color:#fff;overflow:hid
 .seat-left:hover { transform: translateY(-50%) scale(1.15); }
 .seat-right:hover { transform: translateY(-50%) scale(1.15); }
 #setup { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 1000; padding: 20px; backdrop-filter: blur(5px); }
-.setup-modal { background: #062033; border: 2px solid #e8c84a; border-radius: 16px; padding: 25px; width: 100%; max-width: 750px; position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column; gap: 20px; animation: modalPop 0.3s ease-out; }
+.setup-modal { 
+    background: #062033; 
+    border: 2px solid #e8c84a; 
+    border-radius: 16px; 
+    padding: 25px; 
+    width: 100%; 
+    max-width: 750px; 
+    position: relative; 
+    box-shadow: 0 15px 40px rgba(0,0,0,0.7); 
+    display: flex; 
+    flex-direction: column; 
+    gap: 20px; 
+    animation: modalPop 0.3s ease-out;
+    /* EKLENEN HAYAT KURTARICI KODLAR */
+    max-height: 90vh; 
+    overflow-y: auto; 
+    touch-action: auto !important; 
+    overscroll-behavior: contain;
+}
+
 @keyframes modalPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 .close-modal-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 28px; cursor: pointer; transition: color 0.2s; line-height: 1; }
 .close-modal-btn:hover { color: #ff4444; }
