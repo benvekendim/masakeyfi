@@ -337,29 +337,38 @@ function showSkorModal(){
   modal.classList.add('show');
 }
 
-// Oyun masasını ekrana göre otomatik boyutlandırır
 function resizeBoard() {
     const board = document.getElementById('game-board');
     const gameDiv = document.getElementById('game');
     
-    // Sadece oyun ekranı açıksa işlem yap
     if (!board || gameDiv.style.display === 'none') return;
     
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
     
-    // Senin orijinal masanın boyutları
+    // Orijinal tasarım boyutların
     const boardW = 1140; 
     const boardH = 660;
-    
-    // Ekran masadan küçükse küçültme oranını hesapla
-    if(screenW < boardW || screenH < boardH) {
-        // Ekranın enine ve boyuna oranından en küçüğünü al ki sığsın
-        let scale = Math.min(screenW / boardW, screenH / boardH) + 0.05;
+
+    if (screenW < 900) { 
+        // MOBİL MODU:
+        // Masayı ekranın genişliğine tam sığdıracak oranı bul
+        // 0.05 eklemek yerine, tam sığması için 0.98 ile çarpıyoruz (kenar payı)
+        let scale = (screenW / boardW) * 0.98; 
+
+        // Masayı merkeze al ve yukarıdan hizala
+        board.style.transformOrigin = "top center"; 
         board.style.transform = `scale(${scale})`;
+        
+        // Istakanın masanın altında kalmaması için masayı biraz yukarı çek
+        board.style.marginTop = "10px";
     } else {
-        // Ekran büyükse orijinal boyutta bırak
-        board.style.transform = 'scale(1)';
+        // MASAÜSTÜ MODU:
+        // Eğer ekran masadan küçükse sığdır, büyükse 1:1 bırak
+        let scale = Math.min(screenW / boardW, screenH / boardH, 1);
+        board.style.transformOrigin = "center center";
+        board.style.transform = `scale(${scale})`;
+        board.style.marginTop = "0px";
     }
 }
 
