@@ -355,7 +355,7 @@ function resizeBoard() {
     // Ekran masadan küçükse küçültme oranını hesapla
     if(screenW < boardW || screenH < boardH) {
         // Ekranın enine ve boyuna oranından en küçüğünü al ki sığsın
-        let scale = Math.min(screenW / boardW, screenH / boardH) - 0.02; // %2 kenar boşluğu
+        let scale = Math.min(screenW / boardW, screenH / boardH) + 0.05;
         board.style.transform = `scale(${scale})`;
     } else {
         // Ekran büyükse orijinal boyutta bırak
